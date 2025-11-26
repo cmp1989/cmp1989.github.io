@@ -30,140 +30,140 @@
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </nav>
-
     </header>
-
     <main class="content">
       <h2 class="page-title">Driver Roster</h2>
       <section class="card">
         <p>
-          This area is under construction and will be dynamically updated once registrations go live!
+              <script>
+      // 1. Put your published CSV link here:
+      const SHEET_CSV_URL = "PASTE_YOUR_CSV_LINK_HERE";
+
+      function showMessage(msg) {
+        const wrapper = document.querySelector(".table-wrapper");
+        if (wrapper) {
+          wrapper.innerHTML = "<p>" + msg + "</p>";
+        }
+      }
+
+      async function loadRoster() {
+        try {
+          const response = await fetch(SHEET_CSV_URL);
+          const csvText = await response.text();
+
+          const lines = csvText.trim().split("\n");
+          if (lines.length < 2) {
+            showMessage("No registration data found yet.");
+            return;
+          }
+
+          const headers = lines[0].split(",").map(h => h.trim());
+          const rows = lines.slice(1).map(line => line.split(",").map(c => c.trim()));
+
+          // Find important columns
+          const nameIndex = headers.findIndex(h =>
+            /steam name/i.test(h) || /in-game tag/i.test(h) || /driver name/i.test(h)
+          );
+
+          const verifiedIndex = headers.findIndex(h =>
+            /verified/i.test(h)
+          );
+
+          if (nameIndex === -1) {
+            showMessage("Roster error: could not find a Driver Name column. Check your sheet headers.");
+            console.error("Headers:", headers);
+            return;
+          }
+
+          // Any header that looks like a series/number column
+          const seriesIndexes = [];
+          headers.forEach((h, idx) => {
+            if (idx === nameIndex || idx === verifiedIndex) return;
+            const lower = h.toLowerCase();
+            if (lower.includes("#") || lower.includes("number") || lower.includes("car")) {
+              seriesIndexes.push(idx);
+            }
+          });
+
+          const verifiedRows = rows.filter(cells => {
+            if (verifiedIndex === -1) {
+              // If there's no Verified column, show everyone
+              return true;
+            }
+            const value = (cells[verifiedIndex] || "").trim();
+            return value !== "";
+          });
+
+          if (verifiedRows.length === 0) {
+            showMessage("No verified drivers yet.");
+            return;
+          }
+
+          const tableWrapper = document.querySelector(".table-wrapper");
+          if (!tableWrapper) {
+            console.error("No .table-wrapper element found.");
+            return;
+          }
+
+          const table = document.createElement("table");
+
+          // Table head
+          const thead = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+
+          const nameTh = document.createElement("th");
+          nameTh.textContent = "Driver";
+          headerRow.appendChild(nameTh);
+
+          seriesIndexes.forEach(idx => {
+            const th = document.createElement("th");
+            th.textContent = headers[idx];
+            headerRow.appendChild(th);
+          });
+
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          // Table body
+          const tbody = document.createElement("tbody");
+
+          verifiedRows.forEach(cells => {
+            const tr = document.createElement("tr");
+
+            const nameTd = document.createElement("td");
+            nameTd.textContent = cells[nameIndex] || "";
+            tr.appendChild(nameTd);
+
+            seriesIndexes.forEach(idx => {
+              const td = document.createElement("td");
+              td.textContent = cells[idx] || "";
+              tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+
+          tableWrapper.innerHTML = "";
+          tableWrapper.appendChild(table);
+        } catch (err) {
+          console.error("Error loading roster:", err);
+          showMessage("There was an error loading the roster. Please try again later.");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadRoster);
+    </script>
+  </body>
+</html>
         </p>
         <div class="table-wrapper">
-      
         </div>
       </section>
     </main>
-
     <footer class="site-footer">
       &copy; 2025 Redline Racing Alliance. This is a fan-made league and is not officially affiliated with NASCAR or any game developer.
     </footer>
-<script>
-  // 1. Put your published CSV link here:
-  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3L8lLjAnWpwOB4bXnx-i7XwYYTiYquiTWTmxTepyrP7oUEnEPi1vniKNOLBCU6-8WmTAk0kS7rqOj/pub?gid=685554557&single=true&output=csv";
-
-  async function loadRoster() {
-    try {
-      const response = await fetch(SHEET_CSV_URL);
-      const csvText = await response.text();
-
-      const lines = csvText.trim().split("\n");
-      if (lines.length < 2) {
-        console.warn("No data rows found in sheet.");
-        return;
-      }
-
-      // Simple CSV split (works fine as long as fields don't contain commas)
-      const headers = lines[0].split(",").map(h => h.trim());
-      const rows = lines.slice(1).map(line => line.split(",").map(c => c.trim()));
-
-      // Find important columns
-      const nameIndex = headers.findIndex(h =>
-        /steam name/i.test(h) || /in-game tag/i.test(h) || /driver name/i.test(h)
-      );
-
-      const verifiedIndex = headers.findIndex(h =>
-        /verified/i.test(h)
-      );
-
-      if (nameIndex === -1) {
-        console.error("Could not find a name column in the sheet headers:", headers);
-        return;
-      }
-
-      // Any header that looks like a series/number column
-      const seriesIndexes = [];
-      headers.forEach((h, idx) => {
-        if (idx === nameIndex || idx === verifiedIndex) return;
-        const lower = h.toLowerCase();
-        if (lower.includes("#") || lower.includes("number") || lower.includes("car")) {
-          seriesIndexes.push(idx);
-        }
-      });
-
-      if (seriesIndexes.length === 0) {
-        console.warn("No series/number columns found. Check your header names.");
-      }
-
-      // Filter to verified rows only
-      const verifiedRows = rows.filter(cells => {
-        if (verifiedIndex === -1) {
-          // If there's no Verified column, show everyone
-          return true;
-        }
-        const value = (cells[verifiedIndex] || "").trim();
-        return value !== "";
-      });
-
-      // Stop if nothing to show
-      if (verifiedRows.length === 0) {
-        console.warn("No verified drivers found.");
-        return;
-      }
-
-      // Build the table
-      const tableWrapper = document.querySelector(".table-wrapper");
-      if (!tableWrapper) return;
-
-      const table = document.createElement("table");
-
-      // Table head
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-
-      const nameTh = document.createElement("th");
-      nameTh.textContent = "Driver";
-      headerRow.appendChild(nameTh);
-
-      seriesIndexes.forEach(idx => {
-        const th = document.createElement("th");
-        th.textContent = headers[idx];
-        headerRow.appendChild(th);
-      });
-
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-
-      // Table body
-      const tbody = document.createElement("tbody");
-
-      verifiedRows.forEach(cells => {
-        const tr = document.createElement("tr");
-
-        const nameTd = document.createElement("td");
-        nameTd.textContent = cells[nameIndex] || "";
-        tr.appendChild(nameTd);
-
-        seriesIndexes.forEach(idx => {
-          const td = document.createElement("td");
-          td.textContent = cells[idx] || "";
-          tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-      });
-
-      table.appendChild(tbody);
-
-      // Clear whatever was in the wrapper and insert the table
-      tableWrapper.innerHTML = "";
-      tableWrapper.appendChild(table);
-    } catch (err) {
-      console.error("Error loading roster:", err);
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", loadRoster);
-</script>
   </body>
 </html>
