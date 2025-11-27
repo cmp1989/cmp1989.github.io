@@ -39,7 +39,9 @@
       // 1. Put your published CSV link here:
       const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSCQmkUblHh2ZelrU5bA7bh9_qcv04B8dSZdI33kYsxxwgdIciT18hU6NeLXx2WQWan07GjkZZeKg4a/pub?gid=728407482&single=true&output=csv";
 
-     function showMessage(msg) {
+     SHEET_CSV_URL = "PASTE_YOUR_CSV_LINK_HERE";
+
+      function showMessage(msg) {
         const wrapper = document.querySelector(".table-wrapper");
         if (wrapper) {
           wrapper.innerHTML = "<p>" + msg + "</p>";
@@ -107,7 +109,7 @@
             }
           }
 
-          // DRIVER NAME: Prefer roster-specific name, fall back to Steam/in-game if needed
+          // DRIVER NAME: prefer roster-specific name, fall back to Steam/in-game if needed
           const rosterNameIndex = findIndexBy(h =>
             /please type your name exactly as you would like it to appear on the roster/i.test(h)
           );
@@ -160,24 +162,45 @@
             /customs series/i.test(h)
           );
 
-          // Build an array of possible series/number columns,
-          // then we will keep only the ones that actually have data for at least one verified driver
+          // Build an array of possible series/number columns
           const seriesColumns = [
-            { label: "Cup",      index: cupIndex },
-            { label: "Xfinity",  index: xfinityIndex },
-            { label: "Truck",    index: truckIndex },
-            { label: "ARCA",     index: arcaIndex },
+            { label: "Cup",       index: cupIndex },
+            { label: "Xfinity",   index: xfinityIndex },
+            { label: "Truck",     index: truckIndex },
+            { label: "ARCA",      index: arcaIndex },
             { label: "Customs #", index: customsNumberIndex },
           ];
 
+          // Keep only series columns where at least one verified driver has a value
           const activeSeriesColumns = seriesColumns.filter(col => {
             if (col.index === -1) return false;
-            // keep only columns where at least one verified driver has a value
             return verifiedRows.some(cells => {
               const value = (cells[col.index] || "").trim();
               return value.length > 0;
             });
           });
+
+          // Filter verified rows down to only "real" rows:
+          // must have a name AND at least one number OR a customs confirmation
+          const displayRows = verifiedRows.filter(cells => {
+            const name = (cells[nameIndex] || "").trim();
+
+            const hasNumber = activeSeriesColumns.some(col => {
+              const value = (cells[col.index] || "").trim();
+              return value.length > 0;
+            });
+
+            const hasCustomsConfirm =
+              customsConfirmIndex !== -1 &&
+              (cells[customsConfirmIndex] || "").trim().length > 0;
+
+            return name.length > 0 && (hasNumber || hasCustomsConfirm);
+          });
+
+          if (displayRows.length === 0) {
+            showMessage("No verified drivers with assigned numbers yet.");
+            return;
+          }
 
           const tableWrapper = document.querySelector(".table-wrapper");
           if (!tableWrapper) {
@@ -223,7 +246,7 @@
           // Build table body
           const tbody = document.createElement("tbody");
 
-          verifiedRows.forEach(cells => {
+          displayRows.forEach(cells => {
             const tr = document.createElement("tr");
 
             // Driver name
@@ -238,7 +261,7 @@
               tr.appendChild(td);
             });
 
-            // Customs confirmation value (whatever they typed in that confirmation question)
+            // Customs confirmation value
             if (customsConfirmIndex !== -1) {
               const customsTd = document.createElement("td");
               customsTd.textContent = cells[customsConfirmIndex] || "";
