@@ -37,9 +37,9 @@
         <p>
               <script>
       // 1. Put your published CSV link here:
-      const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3L8lLjAnWpwOB4bXnx-i7XwYYTiYquiTWTmxTepyrP7oUEnEPi1vniKNOLBCU6-8WmTAk0kS7rqOj/pub?gid=685554557&single=true&output=csv";
+      const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSCQmkUblHh2ZelrU5bA7bh9_qcv04B8dSZdI33kYsxxwgdIciT18hU6NeLXx2WQWan07GjkZZeKg4a/pub?gid=728407482&single=true&output=csv";
 
-      function showMessage(msg) {
+     function showMessage(msg) {
         const wrapper = document.querySelector(".table-wrapper");
         if (wrapper) {
           wrapper.innerHTML = "<p>" + msg + "</p>";
@@ -95,17 +95,28 @@
           const headers = parsedRows[0];
           const rows = parsedRows.slice(1);
 
-          // Find the name column
-          const nameIndex = headers.findIndex(h =>
-            /steam name/i.test(h) ||
-            /in-game tag/i.test(h) ||
-            /driver name/i.test(h)
+          // Helper to find a header index by a condition
+          function findIndexBy(testFn, fromEnd = false) {
+            if (fromEnd) {
+              for (let i = headers.length - 1; i >= 0; i--) {
+                if (testFn(headers[i], i)) return i;
+              }
+              return -1;
+            } else {
+              return headers.findIndex(testFn);
+            }
+          }
+
+          // DRIVER NAME: Prefer roster-specific name, fall back to Steam/in-game if needed
+          const rosterNameIndex = findIndexBy(h =>
+            /please type your name exactly as you would like it to appear on the roster/i.test(h)
           );
 
-          // Find the Verified column
-          const verifiedIndex = headers.findIndex(h =>
-            /verified/i.test(h)
+          const steamNameIndex = findIndexBy(h =>
+            /steam name\/in-game tag/i.test(h)
           );
+
+          const nameIndex = rosterNameIndex !== -1 ? rosterNameIndex : steamNameIndex;
 
           if (nameIndex === -1) {
             showMessage("Roster error: could not find a Driver Name column. Check your sheet headers.");
@@ -113,10 +124,16 @@
             return;
           }
 
-          // First, figure out which rows are verified
+          // VERIFIED (admin column): take the LAST header that contains 'verified'
+          const verifiedIndex = findIndexBy(
+            (h) => /verified/i.test(h),
+            true // search from end
+          );
+
+          // If we somehow don't have a Verified column, we will show everyone
           const allRows = rows;
           const verifiedRows = allRows.filter(cells => {
-            if (verifiedIndex === -1) return true; // if no Verified column, show everyone
+            if (verifiedIndex === -1) return true; // no Verified column → show all
             const value = (cells[verifiedIndex] || "").trim();
             return value.length > 0;
           });
@@ -126,29 +143,41 @@
             return;
           }
 
-          // Figure out which columns are "number/series" columns
-          // AND actually have at least one value among verified drivers
-          const candidateSeriesIndexes = [];
-          headers.forEach((h, idx) => {
-            if (idx === nameIndex || idx === verifiedIndex) return;
-            const lower = h.toLowerCase();
-            // Heuristic: number columns have # / "number" / "car" in the header
-            if (lower.includes("#") || lower.includes("number") || lower.includes("car")) {
-              candidateSeriesIndexes.push(idx);
-            }
-          });
+          // Specific number columns by header text
+          const cupIndex = findIndexBy(h => /cup number/i.test(h));
+          const xfinityIndex = findIndexBy(h => /xfinity number/i.test(h));
+          const truckIndex = findIndexBy(h => /truck number/i.test(h));
+          const arcaIndex = findIndexBy(h => /arca number/i.test(h));
 
-          const seriesIndexes = candidateSeriesIndexes.filter(idx => {
+          // Customs Number column – question text includes "Customs Number Registration"
+          const customsNumberIndex = findIndexBy(h =>
+            /customs number/i.test(h) || /customs number registration/i.test(h)
+          );
+
+          // Customs confirmation column – long "Please confirm..." text mentioning Customs series
+          const customsConfirmIndex = findIndexBy(h =>
+            /please confirm the following/i.test(h) &&
+            /customs series/i.test(h)
+          );
+
+          // Build an array of possible series/number columns,
+          // then we will keep only the ones that actually have data for at least one verified driver
+          const seriesColumns = [
+            { label: "Cup",      index: cupIndex },
+            { label: "Xfinity",  index: xfinityIndex },
+            { label: "Truck",    index: truckIndex },
+            { label: "ARCA",     index: arcaIndex },
+            { label: "Customs #", index: customsNumberIndex },
+          ];
+
+          const activeSeriesColumns = seriesColumns.filter(col => {
+            if (col.index === -1) return false;
+            // keep only columns where at least one verified driver has a value
             return verifiedRows.some(cells => {
-              const value = (cells[idx] || "").trim();
+              const value = (cells[col.index] || "").trim();
               return value.length > 0;
             });
           });
-
-          if (seriesIndexes.length === 0) {
-            showMessage("No series numbers chosen yet for verified drivers.");
-            return;
-          }
 
           const tableWrapper = document.querySelector(".table-wrapper");
           if (!tableWrapper) {
@@ -162,23 +191,30 @@
           const thead = document.createElement("thead");
           const headerRow = document.createElement("tr");
 
-          // Driver name column
+          // Driver column
           const nameTh = document.createElement("th");
           nameTh.textContent = "Driver";
           headerRow.appendChild(nameTh);
 
-          // One column per number/series that actually has data
-          seriesIndexes.forEach(idx => {
+          // Number columns (only active ones)
+          activeSeriesColumns.forEach(col => {
             const th = document.createElement("th");
-            th.textContent = headers[idx]; // you can rename later if you want
+            th.textContent = col.label;
             headerRow.appendChild(th);
           });
 
-          // Status / Verified column (optional, but you said you want it)
+          // Customs confirmation column (if present)
+          if (customsConfirmIndex !== -1) {
+            const customsConfirmTh = document.createElement("th");
+            customsConfirmTh.textContent = "Racing Customs?";
+            headerRow.appendChild(customsConfirmTh);
+          }
+
+          // Verified column
           if (verifiedIndex !== -1) {
-            const statusTh = document.createElement("th");
-            statusTh.textContent = "Status";
-            headerRow.appendChild(statusTh);
+            const verifiedTh = document.createElement("th");
+            verifiedTh.textContent = "Verified";
+            headerRow.appendChild(verifiedTh);
           }
 
           thead.appendChild(headerRow);
@@ -195,19 +231,26 @@
             nameTd.textContent = cells[nameIndex] || "";
             tr.appendChild(nameTd);
 
-            // Their numbers for each series (some cells may be blank, which is fine)
-            seriesIndexes.forEach(idx => {
+            // Numbers
+            activeSeriesColumns.forEach(col => {
               const td = document.createElement("td");
-              td.textContent = cells[idx] || "";
+              td.textContent = col.index !== -1 ? (cells[col.index] || "") : "";
               tr.appendChild(td);
             });
 
-            // Status (what you put in Verified column)
+            // Customs confirmation value (whatever they typed in that confirmation question)
+            if (customsConfirmIndex !== -1) {
+              const customsTd = document.createElement("td");
+              customsTd.textContent = cells[customsConfirmIndex] || "";
+              tr.appendChild(customsTd);
+            }
+
+            // Verified value
             if (verifiedIndex !== -1) {
-              const statusTd = document.createElement("td");
+              const verifiedTd = document.createElement("td");
               const raw = (cells[verifiedIndex] || "").trim();
-              statusTd.textContent = raw || "Verified";
-              tr.appendChild(statusTd);
+              verifiedTd.textContent = raw || "Verified";
+              tr.appendChild(verifiedTd);
             }
 
             tbody.appendChild(tr);
