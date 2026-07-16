@@ -134,39 +134,28 @@ header {
 
 .hero {
 
-    min-height: 650px;
+    min-height: 720px;
 
-    display: flex;
+    display:flex;
 
-    justify-content: center;
+    justify-content:center;
 
-    align-items: center;
+    align-items:center;
 
-    text-align: center;
+    text-align:center;
 
-    padding: 80px 20px;
-
+    padding:100px 20px;
 
     background:
-
     linear-gradient(
-        rgba(5,11,20,.75),
+        rgba(5,11,20,.55),
         rgba(5,11,20,.95)
     ),
-
     url("krl_background.jpg");
 
-    background-size: cover;
+    background-size:cover;
 
-    background-position: center;
-
-}
-
-
-
-.hero-content {
-
-    max-width: 850px;
+    background-position:center;
 
 }
 
@@ -174,9 +163,11 @@ header {
 
 .hero-logo {
 
-    width: min(320px,80%);
+    width:420px;
 
-    margin-bottom: 25px;
+    max-width:90%;
+
+    margin-bottom:35px;
 
 }
 
@@ -184,13 +175,15 @@ header {
 
 .hero h1 {
 
-    font-size: clamp(38px,6vw,64px);
+    font-size:64px;
 
-    margin: 0;
+    margin:0;
 
-    color: white;
+    color:white;
 
-    font-weight: 800;
+    font-weight:800;
+
+    letter-spacing:-1px;
 
 }
 
@@ -198,11 +191,11 @@ header {
 
 .hero p {
 
-    font-size: 22px;
+    font-size:24px;
 
-    color: var(--accent);
+    color:var(--accent);
 
-    font-weight: 600;
+    font-weight:700;
 
 }
 
@@ -210,37 +203,92 @@ header {
 
 .hero-description {
 
-    max-width: 650px;
+    max-width:750px;
 
-    margin: 25px auto;
+    margin:30px auto;
 
-    color: var(--muted);
+    color:var(--muted);
 
-    font-size: 17px !important;
+    font-size:18px !important;
 
-    font-weight: 400 !important;
-
-}
-
-
-
-
-.hero-buttons {
-
-    margin-top: 35px;
-
-    display: flex;
-
-    justify-content: center;
-
-    gap: 18px;
-
-    flex-wrap: wrap;
+    line-height:1.7;
 
 }
 
 
 
+.section-title {
+
+    text-align:center;
+
+    font-size:42px;
+
+    margin-bottom:55px;
+
+}
+
+
+
+.card {
+
+    background:
+    linear-gradient(
+        145deg,
+        #13243a,
+        #081321
+    );
+
+    border:1px solid rgba(29,184,255,.15);
+
+    padding:40px;
+
+    border-radius:18px;
+
+}
+
+
+
+.card h2 {
+
+    font-size:26px;
+
+    margin-top:10px;
+
+}
+
+
+
+.card p {
+
+    font-size:16px;
+
+    line-height:1.7;
+
+}
+
+
+
+.card-icon {
+
+    font-size:42px;
+
+}
+
+
+
+.cta {
+
+    padding:100px 25px;
+
+}
+
+
+
+.cta h2 {
+
+    font-size:48px;
+
+}
 
 /* =========================
    BUTTONS
