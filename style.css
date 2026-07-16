@@ -134,28 +134,39 @@ header {
 
 .hero {
 
-    min-height: 720px;
+    min-height: 650px;
 
-    display:flex;
+    display: flex;
 
-    justify-content:center;
+    justify-content: center;
 
-    align-items:center;
+    align-items: center;
 
-    text-align:center;
+    text-align: center;
 
-    padding:100px 20px;
+    padding: 80px 20px;
+
 
     background:
+
     linear-gradient(
-        rgba(5,11,20,.55),
+        rgba(5,11,20,.75),
         rgba(5,11,20,.95)
     ),
+
     url("krl_background.jpg");
 
-    background-size:cover;
+    background-size: cover;
 
-    background-position:center;
+    background-position: center;
+
+}
+
+
+
+.hero-content {
+
+    max-width: 850px;
 
 }
 
@@ -163,11 +174,9 @@ header {
 
 .hero-logo {
 
-    width:420px;
+    width: min(320px,80%);
 
-    max-width:90%;
-
-    margin-bottom:35px;
+    margin-bottom: 25px;
 
 }
 
@@ -175,15 +184,13 @@ header {
 
 .hero h1 {
 
-    font-size:64px;
+    font-size: clamp(38px,6vw,64px);
 
-    margin:0;
+    margin: 0;
 
-    color:white;
+    color: white;
 
-    font-weight:800;
-
-    letter-spacing:-1px;
+    font-weight: 800;
 
 }
 
@@ -191,11 +198,11 @@ header {
 
 .hero p {
 
-    font-size:24px;
+    font-size: 22px;
 
-    color:var(--accent);
+    color: var(--accent);
 
-    font-weight:700;
+    font-weight: 600;
 
 }
 
@@ -203,92 +210,35 @@ header {
 
 .hero-description {
 
-    max-width:750px;
+    max-width: 650px;
 
-    margin:30px auto;
+    margin: 25px auto;
 
-    color:var(--muted);
+    color: var(--muted);
 
-    font-size:18px !important;
+    font-size: 17px !important;
 
-    line-height:1.7;
-
-}
-
-
-
-.section-title {
-
-    text-align:center;
-
-    font-size:42px;
-
-    margin-bottom:55px;
+    font-weight: 400 !important;
 
 }
 
 
 
-.card {
 
-    background:
-    linear-gradient(
-        145deg,
-        #13243a,
-        #081321
-    );
+.hero-buttons {
 
-    border:1px solid rgba(29,184,255,.15);
+    margin-top: 35px;
 
-    padding:40px;
+    display: flex;
 
-    border-radius:18px;
+    justify-content: center;
+
+    gap: 18px;
+
+    flex-wrap: wrap;
 
 }
 
-
-
-.card h2 {
-
-    font-size:26px;
-
-    margin-top:10px;
-
-}
-
-
-
-.card p {
-
-    font-size:16px;
-
-    line-height:1.7;
-
-}
-
-
-
-.card-icon {
-
-    font-size:42px;
-
-}
-
-
-
-.cta {
-
-    padding:100px 25px;
-
-}
-
-
-
-.cta h2 {
-
-    font-size:48px;
-
-}
 
 /* =========================
    BUTTONS
